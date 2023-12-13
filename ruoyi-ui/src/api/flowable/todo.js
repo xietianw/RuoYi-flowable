@@ -10,6 +10,21 @@ export function todoList(query) {
   })
 }
 
+export function batchList(query) {
+  return request({
+    url: '/flowable/batch/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function batchComplete(id) {
+  return request({
+    url: '/flowable/batch/complete/'+id,
+    method: 'post',
+  })
+}
+
 // 完成任务
 export function complete(data) {
   return request({
@@ -41,6 +56,14 @@ export function returnTask(data) {
 export function rejectTask(data) {
   return request({
     url: '/flowable/task/reject',
+    method: 'post',
+    data: data
+  })
+}
+
+export function stopProcess(data) {
+  return request({
+    url: '/flowable/task/stopProcess',
     method: 'post',
     data: data
   })
@@ -106,7 +129,12 @@ export function updateDeployment(data) {
     data: data
   })
 }
-
+export function createBatch(id) {
+  return request({
+    url: '/flowable/batch/create/' + id,
+    method: 'post'
+  })
+}
 // 删除流程定义
 export function delDeployment(id) {
   return request({

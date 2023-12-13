@@ -150,6 +150,12 @@ export const constantRoutes = [
         component: () => import('@/views/flowable/task/todo/detail/index'),
         name: 'TodoRecord',
         meta: { title: '流程处理', icon: '' }
+      },
+      {
+        path: 'task/todo/detail/index2',
+        component: () => import('@/views/flowable/task/todo/detail/index2'),
+        name: 'TodoRecord',
+        meta: { title: '创建批次', icon: '' }
       }
     ]
   },

@@ -24,6 +24,7 @@ import com.ruoyi.flowable.factory.FlowServiceFactory;
 import com.ruoyi.flowable.flow.CustomProcessDiagramGenerator;
 import com.ruoyi.flowable.flow.FindNextNodeUtil;
 import com.ruoyi.flowable.flow.FlowableUtils;
+import com.ruoyi.flowable.mapper.FlowBatchMapper;
 import com.ruoyi.flowable.service.IFlowTaskService;
 import com.ruoyi.flowable.service.ISysDeployFormService;
 import com.ruoyi.flowable.service.ISysFormService;
@@ -31,6 +32,7 @@ import com.ruoyi.system.domain.SysForm;
 import com.ruoyi.system.service.ISysRoleService;
 import com.ruoyi.system.service.ISysUserService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +45,7 @@ import org.flowable.engine.ProcessEngineConfiguration;
 import org.flowable.engine.history.HistoricActivityInstance;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.history.HistoricProcessInstanceQuery;
+import org.flowable.engine.impl.util.ProcessDefinitionUtil;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.runtime.ActivityInstance;
 import org.flowable.engine.runtime.Execution;
@@ -86,6 +89,9 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
     private ISysDeployFormService sysInstanceFormService;
     @Resource
     private ISysFormService sysFormService;
+
+    @Resource
+    private FlowBatchMapper flowBatchMapper;
 
     /**
      * 完成任务
@@ -258,6 +264,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
         FlowElement source = null;
         // 获取跳转的节点元素
         FlowElement target = null;
+        FlowElement tem = null;
         if (allElements != null) {
             for (FlowElement flowElement : allElements) {
                 // 当前任务节点元素
@@ -268,7 +275,14 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                 if (flowElement.getId().equals(flowTaskVo.getTargetKey())) {
                     target = flowElement;
                 }
+                if (flowElement instanceof UserTask && tem == null) {
+                    tem = flowElement;
+                }
             }
+        }
+        if (StringUtils.isEmpty(flowTaskVo.getTargetKey())) {
+            target=tem;
+            flowTaskVo.setTargetKey(target.getId());
         }
 
         // 从当前节点向前扫描
@@ -714,6 +728,14 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
             flowTask.setProcDefId(task.getProcessDefinitionId());
             flowTask.setExecutionId(task.getExecutionId());
             flowTask.setTaskName(task.getName());
+            BpmnModel bpmnModel = repositoryService.getBpmnModel(task.getProcessDefinitionId());
+            Process mainProcess = bpmnModel.getMainProcess();
+            Collection<FlowElement> flowElements = mainProcess.getFlowElements();
+            FlowElement flowElement = flowElements.stream().filter(e -> e.getId().equals(task.getTaskDefinitionKey())).findFirst().get();
+            List<ExtensionAttribute> attributeList = flowElement.getAttributes().get("isBatchNode");
+            // 用户自定义属性为默认值时，属性值为空集合
+            flowTask.setIsBatchNode((CollectionUtils.isEmpty(attributeList) || "true".equals(attributeList.get(0).getValue())) ? "是" : "否");
+            flowTask.setHaveBatch(flowBatchMapper.listByInstIdAndTaskId(task.getId(),task.getProcessInstanceId())>0);
             // 流程定义信息
             ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
                     .processDefinitionId(task.getProcessDefinitionId())
@@ -1043,6 +1065,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                         // 读取自定义节点属性 判断是否是否需要动态指定任务接收人员、组
                         String dataType = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_DATA_TYPE);
                         String userType = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_USER_TYPE);
+                        String isBatchNode = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_IS_BATCH_NODE);
                         flowNextDto.setVars(ProcessConstants.PROCESS_APPROVAL);
                         flowNextDto.setType(userType);
                         flowNextDto.setDataType(dataType);
@@ -1080,6 +1103,7 @@ public class FlowTaskServiceImpl extends FlowServiceFactory implements IFlowTask
                     // 读取自定义节点属性 判断是否是否需要动态指定任务接收人员、组
                     String dataType = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_DATA_TYPE);
                     String userType = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_USER_TYPE);
+                    String isBatchNode = userTask.getAttributeValue(ProcessConstants.NAMASPASE, ProcessConstants.PROCESS_CUSTOM_IS_BATCH_NODE);
                     flowNextDto.setVars(ProcessConstants.PROCESS_APPROVAL);
                     flowNextDto.setType(userType);
                     flowNextDto.setDataType(dataType);

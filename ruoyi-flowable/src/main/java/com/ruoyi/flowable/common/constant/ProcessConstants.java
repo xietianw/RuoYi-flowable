@@ -70,6 +70,10 @@ public class ProcessConstants {
      */
     public static final String PROCESS_INITIATOR = "INITIATOR";
 
+    public static final String PROCESS_CUSTOM_IS_BATCH_NODE = "isBatchNode";
+
+
+
 
     /**
      * 流程跳过

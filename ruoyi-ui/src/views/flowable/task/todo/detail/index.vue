@@ -94,7 +94,10 @@
         </el-form>
         <span slot="footer" class="dialog-footer">
           <el-button @click="completeOpen = false">取 消</el-button>
-          <el-button type="primary" @click="taskComplete">确 定</el-button>
+          <el-button type="primary" @click="taskComplete">通 过</el-button>
+          <el-button type="primary" @click="failed">不通过（办结）</el-button>
+          <el-button type="primary" @click="reject">驳 回</el-button>
+          <el-button type="primary" @click="comeback">补正回退</el-button>
         </span>
       </el-dialog>
       <!--退回流程-->
@@ -150,7 +153,7 @@ import {
   returnTask,
   getNextFlowNode,
   delegate,
-  flowTaskForm,
+  flowTaskForm, stopProcess,
 } from "@/api/flowable/todo";
 import flow from '@/views/flowable/task/todo/detail/flow'
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
@@ -368,6 +371,26 @@ export default {
           this.goBack();
         });
       }
+    },
+    /** 驳回任务 */
+    reject() {
+      rejectTask(this.taskForm).then(res => {
+        this.$modal.msgSuccess(res.msg);
+        this.goBack();
+      });
+    },
+    comeback() {
+      returnTask(this.taskForm).then(res => {
+        this.$modal.msgSuccess(res.msg);
+        this.goBack()
+      });
+    },
+
+    failed() {
+      stopProcess(this.taskForm).then(res => {
+        this.$modal.msgSuccess(res.msg);
+        this.goBack();
+      });
     },
     /** 委派任务 */
     handleDelegate() {

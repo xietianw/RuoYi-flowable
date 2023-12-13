@@ -156,6 +156,10 @@ export default {
         { label: '候选人员', value: 'candidateUsers' },
         { label: '候选角色', value: 'candidateGroups' }
       ],
+      nodeTypeOption: [
+        { label: '是', value: true },
+        { label: '否', value: false }
+      ],
       dialogName: '',
       executionListenerLength: 0,
       taskListenerLength: 0,
@@ -207,6 +211,14 @@ export default {
             xType: 'input',
             name: 'documentation',
             label: '节点描述'
+          },
+          {
+            xType: 'switch',
+            name: 'isBatchNode',
+            label: '批次节点',
+            activeText: '是',
+            inactiveText: '否',
+            show: !!_this.showConfig.isBatchNode
           },
           {
             xType: 'slot',
@@ -369,6 +381,11 @@ export default {
       }
       // 写入userType节点信息到xml
       this.updateProperties({'flowable:userType': val})
+    },
+    'formData.isBatchNode': function(val) {
+      if (StrUtil.isNotBlank(val)) {
+        this.updateProperties({'flowable:isBatchNode': val})
+      }
     },
     'formData.async': function(val) {
       if (StrUtil.isNotBlank(val)) {

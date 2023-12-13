@@ -27,14 +27,12 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
-          type="danger"
+          type="primary"
           plain
-          icon="el-icon-delete"
           size="mini"
           :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:deployment:remove']"
-        >删除
+          @click="createBatch"
+        >创建批次
         </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
@@ -43,6 +41,7 @@
     <el-table v-loading="loading" :data="todoList" border @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="任务编号" align="center" prop="taskId" :show-overflow-tooltip="true"/>
+      <el-table-column label="流程定义Id" align="center" prop="procDefId"/>
       <el-table-column label="流程名称" align="center" prop="procDefName"/>
       <el-table-column label="当前节点" align="center" prop="taskName"/>
       <el-table-column label="批次节点" align="center" prop="isBatchNode"/>
@@ -57,17 +56,17 @@
         </template>
       </el-table-column>
       <el-table-column label="接收时间" align="center" prop="createTime" width="180"/>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit-outline"
-            @click="handleProcess(scope.row)"
-          >处理
-          </el-button>
-        </template>
-      </el-table-column>
+<!--      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">-->
+<!--        <template slot-scope="scope">-->
+<!--          <el-button-->
+<!--            size="mini"-->
+<!--            type="text"-->
+<!--            icon="el-icon-edit-outline"-->
+<!--            @click="handleProcess(scope.row)"-->
+<!--          >处理-->
+<!--          </el-button>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
     </el-table>
 
     <pagination
@@ -89,7 +88,7 @@ import {
   rejectTask,
   getDeployment,
   delDeployment,
-  exportDeployment
+  exportDeployment, createBatch
 } from "@/api/flowable/todo";
 
 export default {
@@ -153,12 +152,6 @@ export default {
             taskName: row.taskName,
             startUser: row.startUserName + '-' + row.startDeptName,
           }})
-      }else if(row.haveBatch===true){
-        this.$message({
-          showClose: true,
-          message: '请在批次管理中审批',
-          type: 'warning'
-        });
       }else {
         this.$router.push({ path: '/flowable/task/todo/detail/index2',
           query: {
@@ -219,8 +212,15 @@ export default {
         return delDeployment(ids);
       }).then(() => {
         this.getList();
-       this.$modal.msgSuccess("删除成功");
+        this.$modal.msgSuccess("删除成功");
       })
+    },
+    createBatch(row) {
+      const ids = row.taskId || this.ids;
+        return createBatch(ids);
+        this.getList();
+        this.$modal.msgSuccess("创建成功");
+
     },
   }
 };

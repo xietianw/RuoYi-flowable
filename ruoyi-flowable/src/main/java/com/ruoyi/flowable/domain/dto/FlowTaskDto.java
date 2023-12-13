@@ -103,4 +103,7 @@ public class FlowTaskDto implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date finishTime;
 
+    private String isBatchNode = "false";
+    private boolean haveBatch;
+
 }

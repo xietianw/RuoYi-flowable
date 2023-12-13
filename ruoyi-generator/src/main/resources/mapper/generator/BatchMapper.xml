@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.flowable.mapper.FlowBatchMapper">
+
+
+	<insert id="insertList">
+		insert into sys_flwinst_batch(
+		batch_id,
+		batch_name,
+		flow_instance_id,
+		create_time,
+		update_time,
+		delete_flag,
+	    task_id
+		)values
+
+		<foreach collection="list" item="item" separator=",">
+			(
+			#{item.batchId},
+			#{item.batchName},
+			#{item.flowInstanceId},
+			#{item.createTime},
+			#{item.updateTime},
+			 #{item.delete},
+			 #{item.taskId}
+			)
+
+		 </foreach>
+
+	</insert>
+	<update id="updateFlagByBatchId">
+		update sys_flwinst_batch set delete_flag=1
+		where batch_id=#{batchId}
+	</update>
+	<select id="list" resultType="com.ruoyi.flowable.domain.bo.FlowBatchBO">
+select id as id,
+	   batch_id as batchId,
+	   batch_Name as batchName,
+	   flow_instance_id as flowInstanceId,
+	   create_time as createTime,
+	   update_time as updateTime,
+	   delete_flag as "delete",
+	   task_id as taskId
+from sys_flwinst_batch where delete_flag!=1
+
+
+	</select>
+	<select id="listByInstIdAndTaskId" resultType="java.lang.Integer">
+		select count(*) from sys_flwinst_batch
+		where task_id=#{taskId} and flow_instance_id=#{instId} and delete_flag!=1
+	</select>
+</mapper>

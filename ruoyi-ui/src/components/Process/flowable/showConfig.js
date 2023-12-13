@@ -5,6 +5,7 @@ export default {
     formKey: true
   },
   'bpmn:UserTask': {
+    isBatchNode: true,
     userType: true,
     assignee: true,
     candidateUsers: true,
